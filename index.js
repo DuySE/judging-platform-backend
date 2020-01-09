@@ -1,11 +1,18 @@
 const express = require('express')
-
+const multer = require('multer')
 const cors = require('cors')
-
+const path = require('path')
 const app = express()
-
+const storage = multer.diskStorage({
+  destination: function(req, file, cb) {
+      cb(null, 'uploads/');
+  },
+  filename: function(req, file, cb) {
+      cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage: storage })
 const bodyParser = require('body-parser')
-
 const router = express.Router()
 
 app.use(cors())
@@ -17,11 +24,11 @@ const port = 3001
 const user = { username: '', password: '', firstName: '', lastName: '' }
 
 const problems = [
-  { id: '1287B', name: 'Hyperset', type: 'Programming', points: 300, rating: 1500, tags: ['brute force', 'data structures', 'implementation'] },
-  { id: '1287A', name: 'Angry Students', type: 'Programming', points: 500, rating: 800, tags: ['greedy'] },
-  { id: '1286F', name: 'Harry The Potter', type: 'Programming', points: 500, rating: 3200, tags: ['dp', 'brute force', 'math', 'constructive algorithms', 'fft'] },
-  { id: '1286D', name: 'LLC', type: 'Programming', points: 500, rating: 2900, tags: ['probabilities', 'math', 'data structure'] },
-  { id: '1286B', name: 'Numbers on Tree', type: 'Programming', points: 500, rating: 2000, tags: ['graphs', 'trees', 'sortings'] },
+  { id: '1287B', name: 'Hyperset', type: 'Programming', points: 300, rating: 1500, tags: ['brute force', 'data structures', 'implementation'], content: 'abcdef' },
+  { id: '1287A', name: 'Angry Students', type: 'Programming', points: 500, rating: 800, tags: ['greedy'], content: 'abcdef' },
+  { id: '1286F', name: 'Harry The Potter', type: 'Programming', points: 500, rating: 3200, tags: ['dp', 'brute force', 'math', 'constructive algorithms', 'fft'], content: 'abcdef' },
+  { id: '1286D', name: 'LLC', type: 'Programming', points: 500, rating: 2900, tags: ['probabilities', 'math', 'data structure'], content: 'abcdef' },
+  { id: '1286B', name: 'Numbers on Tree', type: 'Programming', points: 500, rating: 2000, tags: ['graphs', 'trees', 'sortings'], content: 'abcdef' },
 ]
 
 router.post("/login", (req, res, next) => {
@@ -46,7 +53,7 @@ router.get("/problems", (req, res, next) => {
 
 router.get("/problems/:id", (req, res, next) => {
   let problem = problems.filter(problem => problem.id === req.params.id)
-  if (problem) return res.send(problem)
+  if (problem[0]) return res.send(problem[0])
   else return res.status(404).send('Problem not found!')
 })
 
@@ -88,6 +95,12 @@ router.post("/problems", (req, res, next) => {
     problems.push(newProblem)
     return res.send('Create problem successfully!')
   }
+})
+
+router.post("/photos/upload", upload.single('solution'), (req, res, next) => {
+  if (!req.file)
+    return res.status(400).send('Upload file failed!')
+  return res.send(req.file)
 })
 
 app.use(router)
